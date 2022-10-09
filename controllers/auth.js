@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const sendEmail = require('../utils/sendMail');
 
 // @desc    Register user
-// @route   POST /api/v1/auth/register
+// @route   POST /api/v1/register
 // @access  Public
 exports.register = asyncHandler(async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -28,7 +28,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Login user
-// @route   POST /api/v1/auth/login
+// @route   POST /api/v1/login
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -57,7 +57,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Log user out
-// @route   GET /api/v1/auth/logout
+// @route   GET /api/v1/logout
 // @access  Private
 exports.logout = asyncHandler(async (req, res, next) => {
   res.cookie('token', 'none', {
@@ -70,7 +70,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
   });
 });
 // @desc    Get current user
-// @route   GET /api/v1/auth/me
+// @route   GET /api/v1/me
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
@@ -82,7 +82,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Forgot Password
-// @route   POST /api/v1/auth/forgot-password
+// @route   POST /api/v1/forgot-password
 // @access  Public
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const {
@@ -97,7 +97,6 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   }
 
   const resetCode = uuidv4();
-  console.log(resetCode);
 
   user.resetPasswordCode = resetCode;
   user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
@@ -127,7 +126,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Reset password
-// @route   PUT /api/v1/auth/reset-password
+// @route   PUT /api/v1/reset-password
 // @access  Public
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   // Get hashed token
@@ -174,6 +173,8 @@ const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = user.getSignedJwtToken();
 
+  const { name } = user;
+
   const options = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
@@ -185,8 +186,18 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
-  res.status(statusCode).cookie('token', token, options).json({
-    success: true,
-    token,
-  });
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      token,
+      user: {
+        _id: user?._id,
+        name: user?.name,
+        email: user?.email,
+        role: user?.role,
+        image: user?.image,
+      },
+    });
 };
