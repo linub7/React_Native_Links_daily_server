@@ -81,6 +81,31 @@ exports.getMe = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Update user password
+// @route   PUT /api/v1/update-password
+// @access  Private
+exports.updatePassword = asyncHandler(async (req, res, next) => {
+  const {
+    body: { password },
+    user,
+  } = req;
+  if (!password || password.length < 6) {
+    return next(
+      new ErrorResponse(
+        'Password is required & you have to provide at least 6 character',
+        400
+      )
+    );
+  }
+  const existsUser = await User.findById(user._id);
+
+  existsUser.password = password;
+
+  await existsUser.save();
+
+  sendTokenResponse(user, 200, res);
+});
+
 // @desc    Forgot Password
 // @route   POST /api/v1/forgot-password
 // @access  Public
