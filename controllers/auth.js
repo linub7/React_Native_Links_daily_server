@@ -121,7 +121,8 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('There is no user with that email', 404));
   }
 
-  const resetCode = uuidv4();
+  const randomCode = uuidv4();
+  const resetCode = randomCode.split('-')[4];
 
   user.resetPasswordCode = resetCode;
   user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
@@ -139,7 +140,8 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: 'Email sent',
+      message:
+        'Email sent. Please check your email inbox and enter your reset token below.',
     });
   } catch (err) {
     console.log(err);
@@ -162,6 +164,8 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   const {
     body: { email, password, resetCode },
   } = req;
+
+  console.log({ resetCode });
 
   const user = await User.findOne({
     email,
