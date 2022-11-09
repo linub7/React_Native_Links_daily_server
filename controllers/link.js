@@ -46,6 +46,71 @@ exports.updateViewCount = asyncHandler(async (req, res, next) => {
   res.json({ ok: true });
 });
 
+// @desc    manage like
+// @route   PUT /api/v1/links/like/:linkId
+// @access  Private
+exports.manageLike = asyncHandler(async (req, res, next) => {
+  const {
+    params: { linkId },
+    user,
+  } = req;
+
+  if (!mongoose.isValidObjectId(linkId))
+    return next(new ErrorResponse('Invalid Link Id', 400));
+
+  const link = await Link.findById(linkId);
+
+  const isLikedAlready = link.likes.find(
+    (el) => el.toString() === user._id.toString()
+  );
+
+  if (isLikedAlready) {
+    return next(new ErrorResponse('You can not like a link twice', 400));
+  } else {
+    await Link.findByIdAndUpdate(
+      linkId,
+      { $addToSet: { likes: user._id } },
+      { new: true }
+    );
+    return res.json({ like: true });
+  }
+});
+
+// @desc    manage unlike
+// @route   PUT /api/v1/links/unlike/:linkId
+// @access  Private
+exports.manageUnlike = asyncHandler(async (req, res, next) => {
+  const {
+    params: { linkId },
+    user,
+  } = req;
+
+  if (!mongoose.isValidObjectId(linkId))
+    return next(new ErrorResponse('Invalid Link Id', 400));
+
+  const link = await Link.findById(linkId);
+
+  const isLikedAlready = link.likes.find(
+    (el) => el.toString() === user._id.toString()
+  );
+
+  if (!isLikedAlready) {
+    return next(
+      new ErrorResponse(
+        'You can not unlike a link that you did not like already',
+        400
+      )
+    );
+  } else {
+    await Link.findByIdAndUpdate(
+      linkId,
+      { $pull: { likes: user._id } },
+      { new: true }
+    );
+    return res.json({ unlike: true });
+  }
+});
+
 // @desc    Delete link
 // @route   Delete /api/v1/delete-link
 // @access  Private
