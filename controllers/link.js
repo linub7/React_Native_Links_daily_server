@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Link = require('../models/Link');
 const ErrorResponse = require('../utils/errorResponse');
@@ -23,10 +24,28 @@ exports.getLinks = asyncHandler(async (req, res, next) => {
 
   res.json({ links });
 });
+
 // @desc    update link
 // @route   PUT /api/v1/update-link
 // @access  Private
 exports.updateLink = asyncHandler(async (req, res, next) => {});
+
+// @desc    update view count
+// @route   PUT /api/v1/view-count/:linkId
+// @access  Private
+exports.updateViewCount = asyncHandler(async (req, res, next) => {
+  const {
+    params: { linkId },
+  } = req;
+
+  if (!mongoose.isValidObjectId(linkId))
+    return next(new ErrorResponse('Invalid Link Id', 400));
+
+  await Link.findByIdAndUpdate(linkId, { $inc: { views: 1 } }, { new: true });
+
+  res.json({ ok: true });
+});
+
 // @desc    Delete link
 // @route   Delete /api/v1/delete-link
 // @access  Private
