@@ -12,6 +12,7 @@ exports.createLink = asyncHandler(async (req, res, next) => {
 
   const link = new Link({ ...body, postedBy: user._id });
   await link.save();
+  await link.populate('postedBy', 'name');
 
   res.json({ link });
 });
@@ -20,7 +21,10 @@ exports.createLink = asyncHandler(async (req, res, next) => {
 // @route   GET /api/v1/links
 // @access  Public
 exports.getLinks = asyncHandler(async (req, res, next) => {
-  const links = await Link.find({}).sort('-createdAt').limit(500);
+  const links = await Link.find({})
+    .populate('postedBy', 'name')
+    .sort('-createdAt')
+    .limit(500);
 
   res.json({ links });
 });
