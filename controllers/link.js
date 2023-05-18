@@ -29,11 +29,6 @@ exports.getLinks = asyncHandler(async (req, res, next) => {
   res.json({ links });
 });
 
-// @desc    update link
-// @route   PUT /api/v1/update-link
-// @access  Private
-exports.updateLink = asyncHandler(async (req, res, next) => {});
-
 // @desc    update view count
 // @route   PUT /api/v1/view-count/:linkId
 // @access  Private
@@ -116,6 +111,76 @@ exports.manageUnlike = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Delete link
-// @route   Delete /api/v1/delete-link
+// @route   Delete /api/v1/links/:id
 // @access  Private
-exports.deleteLink = asyncHandler(async (req, res, next) => {});
+exports.deleteLink = asyncHandler(async (req, res, next) => {
+  const {
+    params: { id },
+    user,
+  } = req;
+
+  const link = await Link.findById(id);
+  if (link.postedBy?.toString() !== user?._id?.toString())
+    return next(new ErrorResponse('Authorized Wrong!', 401));
+
+  await link.remove();
+  return res.json({
+    message: 'Link deleted successfully',
+  });
+});
+
+// @desc    Update Link
+// @route   PUT /api/v1/links/:id
+// @access  Private
+exports.updateLink = asyncHandler(async (req, res, next) => {
+  const {
+    params: { id },
+    body: { title },
+    user,
+  } = req;
+
+  const link = await Link.findById(id);
+  if (link.postedBy?.toString() !== user?._id?.toString())
+    return next(new ErrorResponse('Authorized Wrong!', 401));
+  link.title = title;
+
+  await link.save();
+
+  return res.json({
+    link,
+  });
+});
+
+// @desc    Get Trending Links
+// @route   GET /api/v1/links/trending
+// @access  Public
+exports.getTrendingAndLatestLinks = asyncHandler(async (req, res, next) => {
+  const trendingLinks = await Link.find({})
+    .populate('postedBy', 'name')
+    .sort('-views')
+    .limit(5);
+
+  const latestLinks = await Link.find({})
+    .populate('postedBy', 'name')
+    .sort('-createdAt')
+    .limit(5);
+
+  return res.json({
+    trendingLinks,
+    latestLinks,
+  });
+});
+
+// @desc    Get My Links
+// @route   GET /api/v1/links/me
+// @access  Private
+exports.getMyLinks = asyncHandler(async (req, res, next) => {
+  const { user } = req;
+
+  const links = await Link.find({ postedBy: user?._id }).populate('likes');
+
+  return res.json({
+    count: links.length,
+    links,
+  });
+});
