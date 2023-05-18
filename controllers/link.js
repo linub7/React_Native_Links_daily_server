@@ -24,7 +24,7 @@ exports.getLinks = asyncHandler(async (req, res, next) => {
   const {
     query: { pageNumber },
   } = req;
-  const perPage = 2;
+  const perPage = 5;
   const page = pageNumber ? pageNumber : 1;
   const links = await Link.find({})
     .skip((page - 1) * perPage)
