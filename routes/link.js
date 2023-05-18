@@ -9,6 +9,7 @@ const {
   manageUnlike,
   getMyLinks,
   getTrendingAndLatestLinks,
+  getLinksCount,
 } = require('../controllers/link');
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.put('/links/unlike/:linkId', protect, manageUnlike);
 
 router.get('/links/me', protect, getMyLinks);
 router.get('/links/trending-latest', protect, getTrendingAndLatestLinks);
+router.get('/links/count', protect, getLinksCount);
 router.put('/links/:id', protect, updateLink);
 router.delete('/links/:id', protect, deleteLink);
 

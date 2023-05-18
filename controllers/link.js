@@ -19,12 +19,18 @@ exports.createLink = asyncHandler(async (req, res, next) => {
 
 // @desc    get links
 // @route   GET /api/v1/links
-// @access  Public
+// @access  Private
 exports.getLinks = asyncHandler(async (req, res, next) => {
+  const {
+    query: { pageNumber },
+  } = req;
+  const perPage = 2;
+  const page = pageNumber ? pageNumber : 1;
   const links = await Link.find({})
+    .skip((page - 1) * perPage)
     .populate('postedBy', 'name')
     .sort('-createdAt')
-    .limit(500);
+    .limit(perPage);
 
   res.json({ links });
 });
@@ -182,5 +188,16 @@ exports.getMyLinks = asyncHandler(async (req, res, next) => {
   return res.json({
     count: links.length,
     links,
+  });
+});
+
+// @desc    Get Links Count
+// @route   GET /api/v1/links/count
+// @access  Private
+exports.getLinksCount = asyncHandler(async (req, res, next) => {
+  const count = await Link.countDocuments();
+
+  return res.json({
+    count,
   });
 });
