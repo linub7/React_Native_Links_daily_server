@@ -58,6 +58,10 @@ readdirSync('./routes').map((r) =>
   app.use(`/api/v1/`, require('./routes/' + r))
 );
 
+app.use('/', (req, res) => {
+  res.json({ message: 'OK' });
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
